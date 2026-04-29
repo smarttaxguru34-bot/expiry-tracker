@@ -1,0 +1,9 @@
+{
+  "name": "Expiry Tracker",
+  "short_name": "Expiry",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05081b",
+  "theme_color": "#05081b",
+  "description": "Expiry Tracker with view-only public mode and edit code protection."
+}
