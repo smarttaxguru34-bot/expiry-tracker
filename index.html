@@ -2176,35 +2176,33 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "expiryDashboardData_v2";
+    const STORAGE_KEY = "expiryDashboardData_v3";
     const DASHBOARD_PASSWORD = "Ayaz2026";
     const DUE_SOON_DAYS = 30;
     const RENEWAL_PLANNING_DAYS = 60;
 
     const defaultItems = [
-      { category: "Apartment Instalment", description: "Expo Armando", expiryDate: "2026-05-09" },
-      { category: "Accommodation", description: "Armando Family Apartment", expiryDate: "2026-05-31" },
-      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2026-06-01" },
-      { category: "Vehicles", description: "Car 007", expiryDate: "2026-08-22" },
-      { category: "Accommodation", description: "Armando Apartment", expiryDate: "2026-08-27" },
-      { category: "Visas", description: "Armando Visa", expiryDate: "2026-08-27" },
-      { category: "Trade", description: "Trade Licence", expiryDate: "2026-09-05" },
-      { category: "Vehicles", description: "Land Cruiser", expiryDate: "2026-09-08" },
-      { category: "Insurance", description: "Ahmad Insurance", expiryDate: "2026-09-22" },
-      { category: "Insurance", description: "Armando Daughter Insurance", expiryDate: "2026-09-22" },
-      { category: "Insurance", description: "Armando Wife Insurance", expiryDate: "2026-09-22" },
       { category: "Labour", description: "Umair Labour Contract", expiryDate: "2026-09-29" },
-      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2026-09-29" },
       { category: "Labour", description: "Ayaz Labour Contract", expiryDate: "2026-10-01" },
       { category: "Apartment Instalment", description: "Expo Armando", expiryDate: "2026-11-05" },
-      { category: "Accommodation", description: "Office Rent (Yearly)", expiryDate: "2026-11-09" },
       { category: "Visas", description: "Armando Daughter Visa", expiryDate: "2026-11-18" },
       { category: "Visas", description: "Armando Wife Visa", expiryDate: "2026-12-25" },
       { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-01-27" },
       { category: "Visas", description: "Ahmad Visa", expiryDate: "2027-03-11" },
+      { category: "Visas", description: "Umair Visa", expiryDate: "2027-05-02" },
       { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-05-27" },
+      { category: "Accommodation", description: "Armando Family Apartment", expiryDate: "2027-06-14" },
+      { category: "Accommodation", description: "Armando Apartment", expiryDate: "2027-08-27" },
+      { category: "Accommodation", description: "Office Rent (Yearly)", expiryDate: "2027-08-31" },
+      { category: "Trade", description: "Trade Licence", expiryDate: "2027-09-05" },
+      { category: "Vehicles", description: "Land Cruiser", expiryDate: "2027-09-05" },
+      { category: "Vehicles", description: "Car 007", expiryDate: "2027-09-20" },
       { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-09-24" },
-      { category: "Visas", description: "Ayaz Visa", expiryDate: "2028-02-23" }
+      { category: "Insurance", description: "Ahmad Insurance", expiryDate: "2027-09-27" },
+      { category: "Insurance", description: "Armando Daughter Insurance", expiryDate: "2027-09-27" },
+      { category: "Insurance", description: "Armando Wife Insurance", expiryDate: "2027-09-27" },
+      { category: "Visas", description: "Ayaz Visa", expiryDate: "2028-02-23" },
+      { category: "Visas", description: "Armando Visa", expiryDate: "2028-09-06" }
     ];
 
     let items = loadItems();
