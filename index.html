@@ -1,342 +1,2693 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#05081b"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Expiry Tracker</title>
-<style>
-:root {
-  --bg:#05081b;
-  --surface:#0b1030;
-  --surface2:#111842;
-  --surface3:#1b2659;
-  --border:#293775;
-  --border-light:rgba(123,144,235,.14);
-  --text:#f5f7ff;
-  --muted:#8d99cd;
-  --faint:#6c78af;
-  --accent:#f3b321;
-  --accent-dim:rgba(243,179,33,.16);
-  --accent-glow:rgba(243,179,33,.26);
-  --expired:#ff5c91;
-  --expired-bg:rgba(255,92,145,.12);
-  --expired-glow:rgba(255,92,145,.18);
-  --soon:#f4c536;
-  --soon-bg:rgba(244,197,54,.12);
-  --soon-glow:rgba(244,197,54,.20);
-  --plan:#3ce7ba;
-  --plan-bg:rgba(60,231,186,.12);
-  --plan-glow:rgba(60,231,186,.18);
-  --safe:#3ce7ba;
-  --safe-bg:rgba(60,231,186,.12);
-  --safe-glow:rgba(60,231,186,.18);
-  --radius:20px;
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-  --safe-top:env(safe-area-inset-top,0px);
-  --font-head:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Arial,sans-serif;
-  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{min-height:100%;background:var(--bg)}
-body{min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--font-body);overscroll-behavior:none;overflow-x:hidden}
-button,input,select{font:inherit;color:inherit}
-button{cursor:pointer;border:0;background:none}
-input,select{font-size:16px}
-input[type="date"]{color-scheme:dark}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
-.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:520px;margin:0 auto;position:relative;background:linear-gradient(180deg,#060a20 0%,#05081b 100%)}
-.header{position:sticky;top:0;z-index:50;background:rgba(6,10,32,.94);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);padding-top:var(--safe-top);border-bottom:1px solid rgba(61,82,162,.28)}
-.header-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px}.header-brand{display:flex;align-items:center;gap:11px;min-width:0}.header-logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--accent),#df9300);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:0 0 18px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.18)}
-.header h1{font-family:var(--font-head);font-size:20px;font-weight:900;letter-spacing:-.5px;color:#f8f1d8}.header-date{font-size:11px;color:#9ca7d4;margin-top:2px;font-weight:650}.add-btn{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#f3b321,#df9300);color:#0c1027;font-size:25px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .2s;box-shadow:0 4px 18px rgba(243,179,33,.30);flex-shrink:0;line-height:1}.add-btn:active{transform:scale(.92)}
-.storage-line{display:none !important;align-items:center;justify-content:space-between;gap:10px;margin:10px 20px 0;padding:9px 12px;border:1px solid rgba(245,166,35,.18);background:rgba(245,166,35,.055);border-radius:13px;color:var(--muted);font-size:11px;font-weight:750}.storage-line strong{color:var(--accent);font-weight:900}.storage-line.error strong{color:var(--soon)}
-.alert-banner{display:none !important;margin:10px 20px 0;background:linear-gradient(120deg,rgba(255,77,109,.13),rgba(251,191,36,.08),rgba(167,139,250,.06));border:1px solid rgba(251,191,36,.26);border-radius:16px;padding:11px 14px;animation:bannerIn .35s ease both;align-items:center;gap:11px}.alert-banner.show{display:none !important}@keyframes bannerIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}.alert-icon{width:32px;height:32px;border-radius:12px;background:linear-gradient(135deg,rgba(245,166,35,.95),rgba(251,191,36,.38));box-shadow:0 0 20px rgba(245,166,35,.18),inset 0 1px 0 rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#09091a;font-weight:1000;font-size:16px}.alert-text{flex:1;font-size:12px;font-weight:700;color:var(--text);line-height:1.42}.alert-pill{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:10px;font-weight:900;border-radius:99px;padding:3px 8px;flex-shrink:0}
-.search-wrap{padding:12px 20px 0}.search-box{position:relative;display:flex;align-items:center}.search-box input{width:100%;background:#0b1031;border:1px solid rgba(66,86,166,.52);border-radius:14px;padding:12px 44px 12px 44px;color:var(--text);outline:none;transition:border-color .2s,background .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}.search-box input::placeholder{color:#7b86bb}.search-box input:focus{border-color:rgba(243,179,33,.48);background:#101741;box-shadow:0 0 0 2px rgba(243,179,33,.07)}.search-icon{position:absolute;left:15px;color:#7b86bb;font-size:17px;pointer-events:none}.clear-search{position:absolute;right:13px;background:#182352;color:#9dabe0;width:24px;height:24px;border-radius:50%;font-size:12px;display:none;align-items:center;justify-content:center}.clear-search.show{display:flex}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 20px 10px}.kpi{background:#0b1030;border:1px solid rgba(63,82,160,.42);border-radius:16px;padding:12px 7px 15px;text-align:center;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .2s,background .2s;user-select:none}.kpi::after{content:"";position:absolute;inset:0;opacity:.08;transition:opacity .3s;pointer-events:none}.kpi-total{background:linear-gradient(180deg,#433126 0%,#37283a 100%);border-color:rgba(243,179,33,.24)}.kpi-total::after{background:none}.kpi-expired::after{background:none}.kpi-soon::after{background:none}.kpi-plan::after{background:none}.kpi.lit{border-color:rgba(120,141,228,.55);background-color:#101741}.kpi:active{transform:scale(.94)}.kpi-label{display:block;font-size:8.5px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:#8c98cd;position:relative;z-index:1;white-space:nowrap}.kpi-num{display:block;font-family:var(--font-head);font-size:28px;font-weight:950;line-height:1;margin-top:3px;position:relative;z-index:1}.kpi-sub{display:block;font-size:9px;color:#6f7aae;font-weight:800;margin-top:4px;position:relative;z-index:1;white-space:nowrap}.kpi-total .kpi-num{color:var(--accent)}.kpi-expired .kpi-num{color:var(--expired)}.kpi-soon .kpi-num{color:var(--soon)}.kpi-plan .kpi-num{color:var(--safe)}.kpi-dot{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;opacity:0;transition:opacity .3s}.kpi.lit .kpi-dot{opacity:1}.kpi-total .kpi-dot{background:var(--accent)}.kpi-expired .kpi-dot{background:var(--expired)}.kpi-soon .kpi-dot{background:var(--soon)}.kpi-plan .kpi-dot{background:var(--safe)}
-.chips{display:flex;gap:7px;padding:4px 20px 12px;overflow-x:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{flex-shrink:0;background:#0c1335;border:1px solid rgba(66,86,166,.46);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;color:#8d99ca;transition:all .2s;white-space:nowrap;user-select:none}.chip.active{background:var(--accent);border-color:var(--accent);color:#081026}.sort-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 20px 12px}.result-count{font-size:12px;color:#f0f4ff;font-weight:700}.sort-select{background:#0c1335;border:1px solid rgba(66,86,166,.46);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;color:#f1f4ff;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none}.sort-select option{background:#111842}
-.list{padding:0 20px 28px;display:flex;flex-direction:column;gap:10px}.card{position:relative;border-radius:var(--radius);transition:transform .15s;animation:cardIn .35s ease both}.card:active{transform:scale(.985)}@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}.card-inner{background:#0b1030;border:1px solid rgba(62,81,156,.34);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden;box-shadow:none}.card.expired .card-inner{background:linear-gradient(90deg,#0b1030 0%,#0b1030 78%,rgba(255,92,145,.10) 100%);border-color:rgba(255,92,145,.26)}.card.soon .card-inner{background:linear-gradient(90deg,#0b1030 0%,#0b1030 78%,rgba(244,197,54,.12) 100%);border-color:rgba(244,197,54,.26)}.card.plan .card-inner{background:linear-gradient(90deg,#0b1030 0%,#0b1030 78%,rgba(60,231,186,.10) 100%);border-color:rgba(60,231,186,.18)}.card.safe .card-inner{background:linear-gradient(90deg,#0b1030 0%,#0b1030 78%,rgba(60,231,186,.10) 100%);border-color:rgba(60,231,186,.18)}.card-glow{position:absolute;top:-24px;right:-24px;width:90px;height:90px;border-radius:50%;opacity:.18;pointer-events:none;filter:blur(28px)}.card.expired .card-glow{background:var(--expired)}.card.soon .card-glow{background:var(--soon)}.card.plan .card-glow{background:var(--plan)}.card.safe .card-glow{background:var(--safe)}.card-bar{position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 3px 3px 0}.card.expired .card-bar{background:var(--expired);box-shadow:2px 0 10px var(--expired-glow)}.card.soon .card-bar{background:var(--soon);box-shadow:2px 0 10px var(--soon-glow)}.card.plan .card-bar{background:var(--plan);box-shadow:2px 0 10px var(--plan-glow)}.card.safe .card-bar{background:var(--safe);box-shadow:2px 0 10px var(--safe-glow)}.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding-left:10px}.card-left{flex:1;min-width:0}.card-cat-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}.cat-icon{font-size:13px;line-height:1}.card-cat{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}.card-desc{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{display:inline-flex;align-items:center;gap:4px;border-radius:10px;padding:5px 9px;font-size:10px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0}.badge.expired{background:rgba(255,92,145,.12);color:var(--expired);border:1px solid rgba(255,92,145,.24)}.badge.soon{background:rgba(244,197,54,.12);color:var(--soon);border:1px solid rgba(244,197,54,.24)}.badge.plan{background:rgba(60,231,186,.12);color:var(--safe);border:1px solid rgba(60,231,186,.18)}.badge.safe{background:rgba(60,231,186,.12);color:var(--safe);border:1px solid rgba(60,231,186,.18)}.card-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-left:10px}.card-date-text{font-size:12px;color:var(--muted);font-weight:600}.card-date-text strong{color:var(--text);font-weight:800;font-size:13px}.days-pill{font-family:var(--font-head);font-size:14px;font-weight:900;white-space:nowrap}.days-pill.expired{color:var(--expired)}.days-pill.soon{color:var(--soon)}.days-pill.plan{color:var(--safe)}.days-pill.safe{color:var(--safe)}.prog-wrap{margin-top:10px;padding-left:10px}.prog-bg{height:7px;background:var(--surface3);border-radius:99px;overflow:hidden}.prog-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1)}.card.expired .prog-fill{background:linear-gradient(90deg,rgba(255,77,109,.5),var(--expired))}.card.soon .prog-fill{background:linear-gradient(90deg,rgba(251,191,36,.5),var(--soon))}.card.plan .prog-fill{background:linear-gradient(90deg,rgba(60,231,186,.4),var(--safe))}.card.safe .prog-fill{background:linear-gradient(90deg,rgba(52,211,153,.4),var(--safe))}.card-actions{display:flex;gap:8px;margin-top:12px;padding-left:10px}.btn-edit,.btn-del{flex:1;border-radius:11px;padding:10px 0;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px}.btn-edit{background:#10173f;color:#edf2ff;border:1px solid rgba(66,86,166,.40)}.btn-del{background:rgba(74,18,45,.30);color:#ff628f;border:1px solid rgba(255,92,145,.25)}
-.empty{text-align:center;padding:60px 20px}.empty-icon{font-size:56px;display:block;margin-bottom:14px;opacity:.55}.empty h3{font-family:var(--font-head);font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px}.empty p{font-size:14px;color:var(--muted);line-height:1.6}
-.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:100;opacity:0;pointer-events:none;transition:opacity .3s}.sheet-overlay.open{opacity:1;pointer-events:all}.sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(110%);width:100%;max-width:520px;background:var(--surface);border-radius:24px 24px 0 0;z-index:101;padding-bottom:calc(20px + var(--safe-bottom));transition:transform .35s cubic-bezier(.2,.8,.3,1);max-height:92vh;max-height:92dvh;overflow-y:auto}.sheet.open{transform:translateX(-50%) translateY(0)}.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 0}.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;position:sticky;top:0;background:var(--surface);z-index:1;border-bottom:1px solid var(--border-light)}.sheet-head h2{font-family:var(--font-head);font-size:20px;font-weight:900;letter-spacing:-.3px}.sheet-close{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;color:var(--muted);font-size:15px;display:flex;align-items:center;justify-content:center}.sheet-body{padding:16px 20px 0}.field{margin-bottom:16px}.field label{display:block;font-size:11px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}.field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;color:var(--text);outline:none;transition:border-color .2s,background .2s;-webkit-appearance:none;appearance:none}.field input:focus{border-color:rgba(245,166,35,.55);background:var(--surface3)}.date-hint{margin-top:7px;font-size:12px;font-weight:700;color:var(--muted);padding-left:2px;min-height:18px}.quick-cats{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.qcat-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted)}.qcat-btn .qcat-icon{font-size:15px}.qcat-btn.sel{border-color:var(--accent);background:var(--accent-dim);color:var(--text)}.suggestions{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:6px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.4)}.suggestions.show{display:block}.sug-item{padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px}.save-btn{width:100%;background:linear-gradient(135deg,var(--accent),#df9300);border:0;border-radius:16px;padding:16px;font-family:var(--font-head);font-size:17px;font-weight:900;color:#09091a;margin-top:6px;box-shadow:0 4px 20px var(--accent-glow)}.save-btn:active{transform:scale(.98)}
-.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}.confirm-overlay.open{display:flex}.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px 22px;width:100%;max-width:340px;text-align:center;animation:popIn .28s cubic-bezier(.2,.8,.3,1)}@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}.confirm-emoji{font-size:38px;display:block;margin-bottom:12px}.confirm-box h3{font-family:var(--font-head);font-size:20px;font-weight:900;margin-bottom:8px}.confirm-box p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px}.confirm-btns{display:flex;gap:10px}.confirm-btns button{flex:1;border-radius:14px;padding:14px;font-size:14px;font-weight:800}.confirm-cancel{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.confirm-ok{background:var(--expired);color:#fff;box-shadow:0 4px 16px var(--expired-glow)}.toast{position:fixed;bottom:calc(18px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:13px;font-weight:700;white-space:nowrap;z-index:300;opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 8px 36px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;max-width:calc(100% - 28px)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all}.toast-undo{background:var(--accent);color:#09091a;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:900;flex-shrink:0}
-@media(min-width:521px){.app{border-left:1px solid var(--border);border-right:1px solid var(--border);min-height:100vh;min-height:100dvh}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
-@media print{.sheet-overlay,.sheet,.toast,.confirm-overlay,.alert-banner,.storage-line,.search-wrap,.chips,.sort-bar,.card-actions{display:none!important}.app{max-width:none;background:#fff;color:#000}.card{break-inside:avoid}}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Expiry Tracker" />
+  <meta name="theme-color" content="#0d1b3d" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>Expiry Tracking Dashboard</title>
+  <style>
+    :root {
+      --navy: #0d1b3d;
+      --teal: #0b8295;
+      --orange: #f28c28;
+      --red: #d71920;
+      --green: #007a3d;
+      --blue: #168bd4;
+      --purple: #7b3fb2;
+      --soft-red: #fde9e7;
+      --soft-orange: #fff1e4;
+      --soft-green: #e6f6ee;
+      --soft-blue: #e8f1fb;
+      --soft-purple: #f0e8fb;
+      --line: #c9d3dd;
+      --text: #102033;
+      --muted: #607080;
+      --white: #ffffff;
+      --shadow: 0 16px 45px rgba(7, 18, 45, 0.18);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { color-scheme: light; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #eef5f9, #f8fbfd);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .dashboard {
+      max-width: 1220px;
+      margin: 0 auto;
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid #d9e2ea;
+    }
+
+    .top-title {
+      background: var(--navy);
+      color: #fff;
+      text-align: center;
+      padding: 26px 16px 20px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      font-size: clamp(22px, 4vw, 34px);
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .sub-title {
+      background: var(--teal);
+      color: #fff;
+      text-align: center;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      line-height: 1.5;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1.15fr 1fr;
+      border-left: 8px solid var(--orange);
+      border-right: 8px solid var(--orange);
+      border-top: 3px solid var(--orange);
+      border-bottom: 3px solid var(--orange);
+    }
+
+    .summary-card {
+      padding: 20px 12px;
+      text-align: center;
+      border-right: 1px solid var(--line);
+      font-weight: 800;
+      min-height: 88px;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, outline 0.12s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 -4px 0 rgba(13, 27, 61, 0.22);
+    }
+
+    .summary-card.active-summary {
+      outline: 4px solid rgba(13, 27, 61, 0.28);
+      outline-offset: -4px;
+      box-shadow: inset 0 -5px 0 var(--navy);
+    }
+
+    .summary-card:last-child { border-right: none; }
+
+    .summary-card span {
+      display: block;
+      font-size: clamp(22px, 4vw, 28px);
+      margin-top: 8px;
+    }
+
+    .total { background: var(--soft-blue); color: var(--blue); }
+    .expired-card { background: var(--soft-red); color: var(--red); }
+    .soon-card { background: var(--soft-orange); color: #d85f00; }
+    .timely-card { background: var(--soft-purple); color: var(--purple); }
+    .safe-card { background: var(--soft-green); color: var(--green); }
+
+    .top-tools {
+      background: #f7fafc;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .control-box label,
+    .entry-box label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      border: 1px solid #bfccd8;
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid rgba(11, 130, 149, 0.22);
+      border-color: var(--teal);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      color: #fff;
+      font-weight: 800;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+      min-height: 42px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.92;
+    }
+
+    .btn-primary { background: var(--teal); }
+    .btn-navy { background: var(--navy); }
+    .btn-green { background: var(--green); }
+    .btn-red { background: var(--red); }
+    .btn-grey { background: #7b8794; }
+
+    .add-btn {
+      width: 160px;
+      background: var(--teal);
+      white-space: nowrap;
+    }
+
+    .save-btn {
+      width: 160px;
+      background: var(--orange);
+      white-space: nowrap;
+    }
+
+    #saveToast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--green);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      z-index: 99999;
+      display: none;
+      max-width: 340px;
+      line-height: 1.45;
+      text-align: center;
+    }
+    #saveToast.active { display: block; animation: fadeInToast 0.25s ease; }
+    @keyframes fadeInToast { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
 
 
-/* Desktop enhancement only - mobile design stays unchanged */
-@media (min-width: 900px){
-  body{background:#05081b;}
-  .app{max-width:1120px;min-height:100dvh;}
-  .header-inner,.search-wrap,.kpis,.chips,.sort-bar,.list{max-width:1060px;margin-left:auto;margin-right:auto;}
-  .header-inner{padding:18px 28px 16px;}
-  .header-logo{width:42px;height:42px;border-radius:13px;}
-  .header h1{font-size:24px;}
-  .header-date{font-size:12px;}
-  .add-btn{width:48px;height:48px;border-radius:16px;font-size:28px;}
-  .search-wrap{padding-left:28px;padding-right:28px;}
-  .search-box input{height:54px;font-size:16px;}
-  .kpis{padding-left:28px;padding-right:28px;gap:12px;}
-  .kpi{min-height:96px;}
-  .kpi-num{font-size:34px;}
-  .chips{padding-left:28px;padding-right:28px;}
-  .sort-bar{padding-left:28px;padding-right:28px;}
-  .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding-left:28px;padding-right:28px;padding-bottom:44px;}
-  .card{height:100%;}
-  .card-inner{height:100%;display:flex;flex-direction:column;}
-  .card-actions{margin-top:auto;padding-top:12px;}
-  .sheet{max-width:560px;}
-}
-@media (min-width: 1280px){
-  .app{max-width:1280px;}
-  .header-inner,.search-wrap,.kpis,.chips,.sort-bar,.list{max-width:1200px;}
-  .list{grid-template-columns:repeat(3,minmax(0,1fr));}
-}
+    .category-strip {
+      padding: 0 18px 16px;
+      background: #f7fafc;
+      border-bottom: 1px solid var(--line);
+    }
 
-</style>
+    .category-title {
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 10px;
+    }
+
+    .category-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .category-chip {
+      width: auto;
+      min-width: 88px;
+      background: #ffffff;
+      color: var(--navy);
+      border: 1px solid #bfccd8;
+      min-height: 38px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .category-chip.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .entry-panel {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      display: none;
+    }
+
+    .entry-panel.active { display: block; }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.7fr 1fr auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .form-btn {
+      width: 140px;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      padding: 0 0 2px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1020px;
+    }
+
+    thead th {
+      background: var(--navy);
+      color: #fff;
+      font-size: 12px;
+      text-transform: uppercase;
+      padding: 13px 10px;
+      border-bottom: 3px solid var(--orange);
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    tbody td {
+      padding: 10px;
+      border: 1px solid var(--line);
+      font-size: 13px;
+      background: #fff;
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(even) td:not(.category-cell):not(.status-cell) {
+      background: #f8fbfd;
+    }
+
+    .category-cell {
+      font-weight: 800;
+      font-size: 12px;
+      text-align: center;
+      color: #005c8a;
+    }
+
+    .cat-apartment { background: #d9effc !important; }
+    .cat-accommodation { background: #e6f2fb !important; }
+    .cat-vehicles { background: #d8f2d8 !important; color: #087b24; }
+    .cat-visas { background: #eadff6 !important; color: #6b3fa0; }
+    .cat-trade { background: #fde5c8 !important; color: #ab5200; }
+    .cat-insurance { background: #d9f7ef !important; color: #00765c; }
+    .cat-labour { background: #ffdeda !important; color: #a22620; }
+
+    .days-cell {
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .status-cell {
+      text-align: center;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .expired {
+      background: var(--soft-red) !important;
+      color: var(--red);
+    }
+
+    .due-soon {
+      background: var(--soft-orange) !important;
+      color: #d85f00;
+    }
+
+    .timely-action {
+      background: var(--soft-purple) !important;
+      color: var(--purple);
+    }
+
+    .safe {
+      background: var(--soft-green) !important;
+      color: var(--green);
+    }
+
+    .action-cell {
+      font-weight: 800;
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .mini-btn {
+      width: auto;
+      padding: 7px 9px;
+      font-size: 11px;
+      border-radius: 7px;
+      min-height: 32px;
+    }
+
+    .footer-note {
+      background: var(--navy);
+      color: #fff;
+      text-align: center;
+      padding: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .hidden { display: none; }
+
+    .empty-state {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .mobile-cards {
+      display: none;
+      padding: 12px;
+      background: #f7fafc;
+    }
+
+    .mobile-category-outside {
+      display: inline-block;
+      margin: 2px 0 6px 4px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .mobile-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(7, 18, 45, 0.08);
+    }
+
+    .mobile-item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      background: var(--navy);
+      color: #fff;
+      align-items: center;
+    }
+
+    .mobile-item-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .mobile-status {
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+      background: #fff;
+    }
+
+    .mobile-item-body {
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .mobile-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px dashed #d6dde5;
+      padding-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .mobile-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .mobile-label {
+      color: var(--muted);
+      font-weight: 700;
+      flex: 0 0 92px;
+    }
+
+    .mobile-value {
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .mobile-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 12px 12px;
+    }
+
+    .mobile-actions button {
+      width: auto;
+      min-width: 78px;
+      min-height: 34px;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+
+    .remaining-block {
+      margin-top: 7px;
+      min-width: 170px;
+    }
+
+    .remaining-bar {
+      width: 100%;
+      height: 7px;
+      background: rgba(13, 27, 61, 0.12);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .remaining-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .remaining-fill.expired-fill { background: var(--red); }
+    .remaining-fill.due-soon-fill { background: #d85f00; }
+    .remaining-fill.timely-fill { background: var(--purple); }
+    .remaining-fill.safe-fill { background: var(--green); }
+
+    .remaining-text {
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      font-style: normal;
+    }
+
+    .password-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 18, 43, 0.68);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 9999;
+    }
+
+    .password-overlay.active { display: flex; }
+
+    .password-box {
+      width: min(420px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      border: 1px solid #dbe4ec;
+    }
+
+    .password-head {
+      background: var(--navy);
+      color: #fff;
+      padding: 18px;
+      font-weight: 900;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .password-body { padding: 18px; }
+
+    .password-body p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .password-error {
+      color: var(--red);
+      font-weight: 800;
+      font-size: 13px;
+      min-height: 20px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .password-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        padding: 10px;
+        background: #edf4f8;
+      }
+
+      .dashboard { border-radius: 14px; }
+
+      .top-title { padding: 22px 12px 16px; }
+
+      .sub-title {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        border-left-width: 5px;
+        border-right-width: 5px;
+      }
+
+      .summary-card {
+        min-height: 76px;
+        padding: 15px 8px;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+
+      .summary-card:last-child {
+        grid-column: 1 / -1;
+      }
+
+      .top-tools {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 10px;
+      }
+
+      .add-btn,
+      .save-btn {
+        width: 100%;
+      }
+
+      .category-strip {
+        padding: 0 12px 12px;
+      }
+
+      .category-chips {
+        gap: 8px;
+      }
+
+      .category-chip {
+        min-height: 36px;
+        font-size: 11px;
+        padding: 8px 12px;
+      }
+
+  
+    .category-strip {
+      padding: 0 18px 16px;
+      background: #f7fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .category-title {
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 10px;
+    }
+
+    .category-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .category-chip {
+      width: auto;
+      min-width: 88px;
+      background: #ffffff;
+      color: var(--navy);
+      border: 1px solid #bfccd8;
+      min-height: 38px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .category-chip.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    .entry-panel { padding: 12px; }
+
+      .entry-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .entry-actions-mobile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .form-btn { width: 100%; }
+
+      input,
+      select,
+      button {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
+      }
+
+      .table-wrap { display: none; }
+
+      .mobile-cards { display: block; }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 6px;
+        padding-top: max(6px, env(safe-area-inset-top));
+        padding-right: max(6px, env(safe-area-inset-right));
+        padding-bottom: max(6px, env(safe-area-inset-bottom));
+        padding-left: max(6px, env(safe-area-inset-left));
+        -webkit-text-size-adjust: 100%;
+      }
+
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+
+      .top-tools {
+        grid-template-columns: 1fr;
+      }
+
+      .category-chip {
+        min-width: auto;
+      }
+
+      .mobile-item-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .mobile-status { align-self: flex-start; }
+
+      .mobile-row {
+        align-items: flex-start;
+      }
+
+      .mobile-actions {
+        justify-content: flex-end;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .dashboard {
+        box-shadow: none;
+        border: none;
+      }
+
+      .top-tools,
+      .category-strip,
+      .entry-panel,
+      .row-actions,
+      .mobile-actions,
+      .no-print {
+        display: none !important;
+      }
+
+      .table-wrap { display: block; }
+
+      .mobile-cards { display: none !important; }
+
+      thead th { position: static; }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <header class="header" role="banner">
-    <div class="header-inner">
-      <div class="header-brand">
-        <div class="header-logo" aria-hidden="true">⏱</div>
-        <div>
-          <h1>Expiry Tracker</h1>
-          <div class="header-date" id="headerDate" aria-live="polite">Loading date...</div>
+  <main class="dashboard">
+    <section class="top-title">Expiry Tracking Dashboard</section>
+    <section class="sub-title">
+      Last Updated: <span id="lastUpdated">01 July 2026</span> &nbsp; / &nbsp;
+      Warning: 30 Days Due Soon and 60 Days Renewal Planning
+    </section>
+
+    <section class="summary-grid">
+      <div class="summary-card total active-summary" data-summary="ALL" onclick="setStatusFilter('ALL')">TOTAL ITEMS <span id="totalCount">23</span></div>
+      <div class="summary-card expired-card" data-summary="EXPIRED" onclick="setStatusFilter('EXPIRED')">EXPIRED <span id="expiredCount">3</span></div>
+      <div class="summary-card soon-card" data-summary="DUE SOON" onclick="setStatusFilter('DUE SOON')">DUE SOON 30D <span id="soonCount">0</span></div>
+      <div class="summary-card timely-card" data-summary="TIMELY ACTION" onclick="setStatusFilter('TIMELY ACTION')">RENEWAL PLANNING 60D <span id="timelyCount">3</span></div>
+      <div class="summary-card safe-card" data-summary="SAFE" onclick="setStatusFilter('SAFE')">SAFE <span id="safeCount">17</span></div>
+    </section>
+
+    <section class="top-tools no-print">
+      <div class="control-box">
+        <label for="searchBox">Search</label>
+        <input id="searchBox" type="text" placeholder="Search category or description" />
+      </div>
+      <button class="add-btn" onclick="secureOpenEntryPanel()">+ Add New Item</button>
+      <button class="save-btn" onclick="saveToFile()">&#128190; Save to File</button>
+    </section>
+
+    <section class="category-strip no-print">
+      <div class="category-title">Category</div>
+      <div id="categoryChips" class="category-chips"><button type="button" class="category-chip active" data-category="ALL">All</button><button type="button" class="category-chip" data-category="Accommodation">Accommodation</button><button type="button" class="category-chip" data-category="Apartment Instalment">Apartment Instalment</button><button type="button" class="category-chip" data-category="Insurance">Insurance</button><button type="button" class="category-chip" data-category="Labour">Labour</button><button type="button" class="category-chip" data-category="Trade">Trade</button><button type="button" class="category-chip" data-category="Vehicles">Vehicles</button><button type="button" class="category-chip" data-category="Visas">Visas</button></div>
+    </section>
+
+    <section id="entryPanel" class="entry-panel no-print">
+      <form id="entryForm">
+        <div class="entry-grid">
+          <div class="entry-box">
+            <label for="categoryInput">Category</label>
+            <input id="categoryInput" type="text" placeholder="Example: Visa" required />
+          </div>
+          <div class="entry-box">
+            <label for="descriptionInput">Description</label>
+            <input id="descriptionInput" type="text" placeholder="Example: Trade Licence" required />
+          </div>
+          <div class="entry-box">
+            <label for="expiryInput">Expiry Date</label>
+            <input id="expiryInput" type="date" required />
+          </div>
+          <div class="entry-actions-mobile">
+            <button class="form-btn btn-green" type="submit" id="saveButton">Save Item</button>
+          </div>
+          <div class="entry-actions-mobile">
+            <button class="form-btn btn-red" type="button" onclick="clearForm()">Clear</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Expiry Date</th>
+            <th>Days Left</th>
+            <th>Status</th>
+            <th>Action</th>
+            <th class="no-print">Edit</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Armando</td>
+          <td><strong>09/05/2026</strong></td>
+          <td class="days-cell">-53 d</td>
+          <td class="status-cell expired">EXPIRED</td>
+          <td class="action-cell expired">Renew Immediately
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 53 days ago</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(0)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(0)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-accommodation">Accommodation</td>
+          <td>Armando Family Apartment</td>
+          <td><strong>31/05/2026</strong></td>
+          <td class="days-cell">-31 d</td>
+          <td class="status-cell expired">EXPIRED</td>
+          <td class="action-cell expired">Renew Immediately
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 31 days ago</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(1)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(1)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Mohammad</td>
+          <td><strong>01/06/2026</strong></td>
+          <td class="days-cell">-30 d</td>
+          <td class="status-cell expired">EXPIRED</td>
+          <td class="action-cell expired">Renew Immediately
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 30 days ago</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(2)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(2)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-vehicles">Vehicles</td>
+          <td>Car 007</td>
+          <td><strong>22/08/2026</strong></td>
+          <td class="days-cell">52 d</td>
+          <td class="status-cell timely-action">RENEWAL PLANNING</td>
+          <td class="action-cell timely-action">Plan Renewal
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 87%;"></div>
+          </div>
+          <div class="remaining-text">52 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(3)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(3)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-accommodation">Accommodation</td>
+          <td>Armando Apartment</td>
+          <td><strong>27/08/2026</strong></td>
+          <td class="days-cell">57 d</td>
+          <td class="status-cell timely-action">RENEWAL PLANNING</td>
+          <td class="action-cell timely-action">Plan Renewal
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 95%;"></div>
+          </div>
+          <div class="remaining-text">57 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(4)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(4)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-visas">Visas</td>
+          <td>Armando Visa</td>
+          <td><strong>27/08/2026</strong></td>
+          <td class="days-cell">57 d</td>
+          <td class="status-cell timely-action">RENEWAL PLANNING</td>
+          <td class="action-cell timely-action">Plan Renewal
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 95%;"></div>
+          </div>
+          <div class="remaining-text">57 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(5)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(5)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-trade">Trade</td>
+          <td>Trade Licence</td>
+          <td><strong>05/09/2026</strong></td>
+          <td class="days-cell">66 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">66 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(6)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(6)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-vehicles">Vehicles</td>
+          <td>Land Cruiser</td>
+          <td><strong>08/09/2026</strong></td>
+          <td class="days-cell">69 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">69 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(7)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(7)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-insurance">Insurance</td>
+          <td>Ahmad Insurance</td>
+          <td><strong>22/09/2026</strong></td>
+          <td class="days-cell">83 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(8)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(8)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-insurance">Insurance</td>
+          <td>Armando Daughter Insurance</td>
+          <td><strong>22/09/2026</strong></td>
+          <td class="days-cell">83 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(9)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(9)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-insurance">Insurance</td>
+          <td>Armando Wife Insurance</td>
+          <td><strong>22/09/2026</strong></td>
+          <td class="days-cell">83 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(10)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(10)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-labour">Labour</td>
+          <td>Umair Labour Contract</td>
+          <td><strong>29/09/2026</strong></td>
+          <td class="days-cell">90 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">90 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(11)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(11)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Mohammad</td>
+          <td><strong>29/09/2026</strong></td>
+          <td class="days-cell">90 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">90 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(12)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(12)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-labour">Labour</td>
+          <td>Ayaz Labour Contract</td>
+          <td><strong>01/10/2026</strong></td>
+          <td class="days-cell">92 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">92 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(13)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(13)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Armando</td>
+          <td><strong>05/11/2026</strong></td>
+          <td class="days-cell">127 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">127 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(14)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(14)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-accommodation">Accommodation</td>
+          <td>Office Rent (Yearly)</td>
+          <td><strong>09/11/2026</strong></td>
+          <td class="days-cell">131 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">131 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(15)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(15)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-visas">Visas</td>
+          <td>Armando Daughter Visa</td>
+          <td><strong>18/11/2026</strong></td>
+          <td class="days-cell">140 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">140 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(16)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(16)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-visas">Visas</td>
+          <td>Armando Wife Visa</td>
+          <td><strong>25/12/2026</strong></td>
+          <td class="days-cell">177 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">177 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(17)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(17)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Mohammad</td>
+          <td><strong>27/01/2027</strong></td>
+          <td class="days-cell">210 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">210 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(18)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(18)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-visas">Visas</td>
+          <td>Ahmad Visa</td>
+          <td><strong>11/03/2027</strong></td>
+          <td class="days-cell">253 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">253 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(19)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(19)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Mohammad</td>
+          <td><strong>27/05/2027</strong></td>
+          <td class="days-cell">330 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">330 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(20)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(20)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-apartment">Apartment Instalment</td>
+          <td>Expo Mohammad</td>
+          <td><strong>24/09/2027</strong></td>
+          <td class="days-cell">450 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">450 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(21)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(21)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="category-cell cat-visas">Visas</td>
+          <td>Ayaz Visa</td>
+          <td><strong>23/02/2028</strong></td>
+          <td class="days-cell">602 d</td>
+          <td class="status-cell safe">SAFE</td>
+          <td class="action-cell safe">No Action Required
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">602 days remaining</div>
+        </div>
+      </td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(22)">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(22)">Delete</button>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div id="emptyState" class="empty-state hidden">No items found.</div>
+    </section>
+
+    <section id="mobileCards" class="mobile-cards">
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Armando</div>
+            <div class="mobile-status expired">EXPIRED</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">09/05/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">-53 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Renew Immediately</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 53 days ago</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(0)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(0)">Delete</button>
+          </div>
         </div>
       </div>
-      <button class="add-btn" id="addBtn" type="button" aria-label="Add new item">+</button>
-    </div>
-  </header>
+      <div>
+        <div class="mobile-category-outside cat-accommodation">Accommodation</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Family Apartment</div>
+            <div class="mobile-status expired">EXPIRED</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">31/05/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">-31 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Renew Immediately</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 31 days ago</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(1)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(1)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Mohammad</div>
+            <div class="mobile-status expired">EXPIRED</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">01/06/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">-30 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Renew Immediately</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill expired-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">Expired 30 days ago</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(2)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(2)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-vehicles">Vehicles</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Car 007</div>
+            <div class="mobile-status timely-action">RENEWAL PLANNING</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">22/08/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">52 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Plan Renewal</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 87%;"></div>
+          </div>
+          <div class="remaining-text">52 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(3)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(3)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-accommodation">Accommodation</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Apartment</div>
+            <div class="mobile-status timely-action">RENEWAL PLANNING</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">27/08/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">57 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Plan Renewal</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 95%;"></div>
+          </div>
+          <div class="remaining-text">57 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(4)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(4)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-visas">Visas</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Visa</div>
+            <div class="mobile-status timely-action">RENEWAL PLANNING</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">27/08/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">57 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">Plan Renewal</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill timely-fill" style="width: 95%;"></div>
+          </div>
+          <div class="remaining-text">57 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(5)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(5)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-trade">Trade</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Trade Licence</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">05/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">66 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">66 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(6)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(6)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-vehicles">Vehicles</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Land Cruiser</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">08/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">69 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">69 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(7)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(7)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-insurance">Insurance</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Ahmad Insurance</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">22/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">83 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(8)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(8)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-insurance">Insurance</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Daughter Insurance</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">22/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">83 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(9)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(9)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-insurance">Insurance</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Wife Insurance</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">22/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">83 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">83 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(10)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(10)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-labour">Labour</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Umair Labour Contract</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">29/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">90 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">90 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(11)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(11)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Mohammad</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">29/09/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">90 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">90 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(12)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(12)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-labour">Labour</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Ayaz Labour Contract</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">01/10/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">92 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">92 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(13)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(13)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Armando</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">05/11/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">127 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">127 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(14)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(14)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-accommodation">Accommodation</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Office Rent (Yearly)</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">09/11/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">131 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">131 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(15)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(15)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-visas">Visas</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Daughter Visa</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">18/11/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">140 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">140 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(16)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(16)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-visas">Visas</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Armando Wife Visa</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">25/12/2026</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">177 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">177 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(17)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(17)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Mohammad</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">27/01/2027</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">210 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">210 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(18)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(18)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-visas">Visas</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Ahmad Visa</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">11/03/2027</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">253 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">253 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(19)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(19)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Mohammad</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">27/05/2027</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">330 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">330 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(20)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(20)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-apartment">Apartment Instalment</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Expo Mohammad</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">24/09/2027</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">450 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">450 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(21)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(21)">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mobile-category-outside cat-visas">Visas</div>
+        <div class="mobile-item">
+          <div class="mobile-item-head">
+            <div class="mobile-item-title">Ayaz Visa</div>
+            <div class="mobile-status safe">SAFE</div>
+          </div>
+          <div class="mobile-item-body">
+            <div class="mobile-row">
+              <span class="mobile-label">Expiry</span>
+              <span class="mobile-value">23/02/2028</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Days Left</span>
+              <span class="mobile-value">602 d</span>
+            </div>
+            <div class="mobile-row">
+              <span class="mobile-label">Action</span>
+              <span class="mobile-value">No Action Required</span>
+            </div>
+            
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill safe-fill" style="width: 100%;"></div>
+          </div>
+          <div class="remaining-text">602 days remaining</div>
+        </div>
+      
+          </div>
+          <div class="mobile-actions no-print">
+            <button class="btn-navy" onclick="secureEditItem(22)">Edit</button>
+            <button class="btn-red" onclick="secureDeleteItem(22)">Delete</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <div class="storage-line" id="storageLine"><span>Data storage</span><strong id="storageText">Checking...</strong></div>
-
-  <div class="alert-banner" id="alertBanner" role="status" aria-live="polite">
-    <span class="alert-icon" aria-hidden="true">!</span>
-    <span class="alert-text" id="alertText"></span>
-    <span class="alert-pill" id="alertPill"></span>
-  </div>
-
-  <div class="search-wrap">
-    <div class="search-box">
-      <span class="search-icon" aria-hidden="true">⌕</span>
-      <input id="searchInput" type="text" placeholder="Search items or categories…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="searchbox" aria-label="Search items"/>
-      <button class="clear-search" id="clearSearchBtn" type="button" aria-label="Clear search">×</button>
-    </div>
-  </div>
-
-  <div class="kpis" role="region" aria-label="Summary statistics">
-    <button class="kpi kpi-total lit" id="kpiTotal" data-kpi="ALL" type="button" aria-label="Show all items">
-      <span class="kpi-label">Total</span><span class="kpi-num" id="kpiTotalNum">0</span><span class="kpi-sub">All</span><span class="kpi-dot" aria-hidden="true"></span>
-    </button>
-    <button class="kpi kpi-expired" id="kpiExpired" data-kpi="expired" type="button" aria-label="Filter expired">
-      <span class="kpi-label">Expired</span><span class="kpi-num" id="kpiExpiredNum">0</span><span class="kpi-sub">Action</span><span class="kpi-dot" aria-hidden="true"></span>
-    </button>
-    <button class="kpi kpi-soon" id="kpiSoon" data-kpi="soon" type="button" aria-label="Filter items inside 30 days">
-      <span class="kpi-label">≤ 30 Days</span><span class="kpi-num" id="kpiSoonNum">0</span><span class="kpi-sub">Warning</span><span class="kpi-dot" aria-hidden="true"></span>
-    </button>
-    <button class="kpi kpi-plan" id="kpiPlan" data-kpi="plan60" type="button" aria-label="Filter items inside 60 days">
-      <span class="kpi-label">≤ 60 Days</span><span class="kpi-num" id="kpiPlanNum">0</span><span class="kpi-sub">Plan</span><span class="kpi-dot" aria-hidden="true"></span>
-    </button>
-  </div>
-
-  <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
-
-  <div class="sort-bar">
-    <span class="result-count" id="resultCount" aria-live="polite">0 items</span>
-    <select class="sort-select" id="sortSelect" aria-label="Sort order">
-      <option value="days-asc">Soonest First</option>
-      <option value="days-desc">Latest First</option>
-      <option value="alpha">A → Z</option>
-      <option value="cat">By Category</option>
-    </select>
-  </div>
-
-  <main class="list" id="cardList" aria-label="Expiry items">
-    <div class="empty"><span class="empty-icon">⏳</span><h3>Loading tracker...</h3><p>Please open this file in Safari/Chrome if it does not load inside WhatsApp preview.</p></div>
+    <section class="footer-note">
+      EXPIRED = Past expiry date &nbsp;&nbsp;&nbsp;
+      DUE SOON = 0 to 30 days &nbsp;&nbsp;&nbsp;
+      RENEWAL PLANNING = 31 to 60 days &nbsp;&nbsp;&nbsp;
+      SAFE = More than 60 days remaining
+    </section>
+    <noscript>
+    <div class="empty-state">Your phone preview is showing the static version. For search, filters, add, edit, and delete, open this file in Chrome.</div>
+  </noscript>
   </main>
-</div>
+  <div id="saveToast"></div>
 
-<div class="sheet-overlay" id="overlay"></div>
-<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-  <div class="sheet-handle" aria-hidden="true"></div>
-  <div class="sheet-head">
-    <h2 id="sheetTitle">Add Expiry</h2>
-    <button class="sheet-close" id="sheetCloseBtn" type="button" aria-label="Close">×</button>
-  </div>
-  <div class="sheet-body">
-    <div class="field">
-      <label for="catInput">Category</label>
-      <input id="catInput" type="text" placeholder="e.g. Visa, Insurance…" autocomplete="off" autocorrect="off"/>
-      <div class="quick-cats" id="quickCats" role="group" aria-label="Quick category pick"></div>
-      <div class="suggestions" id="suggestions" role="listbox"></div>
-    </div>
-    <div class="field">
-      <label for="descInput">Description</label>
-      <input id="descInput" type="text" placeholder="e.g. Ahmad Visa" autocomplete="off"/>
-    </div>
-    <div class="field">
-      <label for="dateInput">Expiry Date</label>
-      <input id="dateInput" type="date"/>
-      <div class="date-hint" id="dateHint" aria-live="polite"></div>
-    </div>
-    <button class="save-btn" id="saveBtn" type="button">Save Item</button>
-  </div>
-</section>
-
-<div class="confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-label="Confirm delete">
-  <div class="confirm-box">
-    <span class="confirm-emoji" aria-hidden="true">🗑️</span>
-    <h3>Delete Item?</h3>
-    <p id="confirmMsg"></p>
-    <div class="confirm-btns">
-      <button class="confirm-cancel" id="confirmCancelBtn" type="button">Cancel</button>
-      <button class="confirm-ok" id="confirmOkBtn" type="button">Delete</button>
+  <div id="passwordOverlay" class="password-overlay">
+    <div class="password-box">
+      <div class="password-head">Password Required</div>
+      <div class="password-body">
+        <p>Enter password to make changes in the dashboard.</p>
+        <input id="passwordInput" type="password" placeholder="Enter password" />
+        <div id="passwordError" class="password-error"></div>
+        <div class="password-actions">
+          <button class="btn-grey" type="button" onclick="cancelPassword()">Cancel</button>
+          <button class="btn-green" type="button" onclick="submitPassword()">Continue</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button class="toast-undo" id="toastUndo" type="button" style="display:none" aria-label="Undo last delete">Undo</button></div>
+  <script>
+    const STORAGE_KEY = "expiryDashboardData_v2";
+    const DASHBOARD_PASSWORD = "Ayaz2026";
+    const DUE_SOON_DAYS = 30;
+    const RENEWAL_PLANNING_DAYS = 60;
 
-<script>
-(function(){
-'use strict';
+    const defaultItems = [
+      { category: "Apartment Instalment", description: "Expo Armando", expiryDate: "2026-05-09" },
+      { category: "Accommodation", description: "Armando Family Apartment", expiryDate: "2026-05-31" },
+      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2026-06-01" },
+      { category: "Vehicles", description: "Car 007", expiryDate: "2026-08-22" },
+      { category: "Accommodation", description: "Armando Apartment", expiryDate: "2026-08-27" },
+      { category: "Visas", description: "Armando Visa", expiryDate: "2026-08-27" },
+      { category: "Trade", description: "Trade Licence", expiryDate: "2026-09-05" },
+      { category: "Vehicles", description: "Land Cruiser", expiryDate: "2026-09-08" },
+      { category: "Insurance", description: "Ahmad Insurance", expiryDate: "2026-09-22" },
+      { category: "Insurance", description: "Armando Daughter Insurance", expiryDate: "2026-09-22" },
+      { category: "Insurance", description: "Armando Wife Insurance", expiryDate: "2026-09-22" },
+      { category: "Labour", description: "Umair Labour Contract", expiryDate: "2026-09-29" },
+      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2026-09-29" },
+      { category: "Labour", description: "Ayaz Labour Contract", expiryDate: "2026-10-01" },
+      { category: "Apartment Instalment", description: "Expo Armando", expiryDate: "2026-11-05" },
+      { category: "Accommodation", description: "Office Rent (Yearly)", expiryDate: "2026-11-09" },
+      { category: "Visas", description: "Armando Daughter Visa", expiryDate: "2026-11-18" },
+      { category: "Visas", description: "Armando Wife Visa", expiryDate: "2026-12-25" },
+      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-01-27" },
+      { category: "Visas", description: "Ahmad Visa", expiryDate: "2027-03-11" },
+      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-05-27" },
+      { category: "Apartment Instalment", description: "Expo Mohammad", expiryDate: "2027-09-24" },
+      { category: "Visas", description: "Ayaz Visa", expiryDate: "2028-02-23" }
+    ];
 
-var STORAGE_KEY='expiryData_iPhoneSafe_v4';
-var memoryStore='';
-var storageWorks=true;
-var EDIT_CODE='Ahmad2026';
-var editSession=false;
-var DEFAULT_DATA=[
-{id:'1',category:'Apartment Installment',description:'Expo Armando',expiryDate:'2026-05-09'},
-{id:'2',category:'Accommodation',description:'Armando Family Apartment',expiryDate:'2026-05-31'},
-{id:'3',category:'Apartment Installment',description:'Expo Mohammad',expiryDate:'2026-06-01'},
-{id:'4',category:'Vehicles',description:'Car 007',expiryDate:'2026-08-22'},
-{id:'5',category:'Accommodation',description:'Armando Apartment',expiryDate:'2026-08-27'},
-{id:'6',category:'Visas',description:'Armando Visa',expiryDate:'2026-08-27'},
-{id:'7',category:'Trade',description:'Trade Licence',expiryDate:'2026-09-05'},
-{id:'8',category:'Vehicles',description:'Land Cruiser',expiryDate:'2026-09-08'},
-{id:'9',category:'Insurance',description:'Ahmad Insurance',expiryDate:'2026-09-22'},
-{id:'10',category:'Insurance',description:'Armando Daughter Insurance',expiryDate:'2026-09-22'},
-{id:'11',category:'Insurance',description:'Armando Wife Insurance',expiryDate:'2026-09-22'},
-{id:'12',category:'Labour',description:'Umair Labour Contract',expiryDate:'2026-09-29'},
-{id:'13',category:'Apartment Installment',description:'Expo Mohammad',expiryDate:'2026-09-29'},
-{id:'14',category:'Labour',description:'Ayaz Labour Contract',expiryDate:'2026-10-01'},
-{id:'15',category:'Apartment Installment',description:'Expo Armando',expiryDate:'2026-11-05'},
-{id:'16',category:'Accommodation',description:'Office Rent (Yearly)',expiryDate:'2026-11-09'},
-{id:'17',category:'Visas',description:'Armando Daughter Visa',expiryDate:'2026-11-18'},
-{id:'18',category:'Visas',description:'Armando Wife Visa',expiryDate:'2026-12-25'},
-{id:'19',category:'Apartment Installment',description:'Expo Mohammad',expiryDate:'2027-01-27'},
-{id:'20',category:'Visas',description:'Ahmad Visa',expiryDate:'2027-03-11'},
-{id:'21',category:'Apartment Installment',description:'Expo Mohammad',expiryDate:'2027-05-27'},
-{id:'22',category:'Apartment Installment',description:'Expo Mohammad',expiryDate:'2027-09-24'},
-{id:'23',category:'Visas',description:'Ayaz Visa',expiryDate:'2028-02-23'}
-];
-var CAT_ICON_MAP={'visa':'🛂','visas':'🛂','passport':'📘','insurance':'🛡️','health':'❤️','medical':'❤️','vehicle':'🚗','vehicles':'🚗','car':'🚗','cruiser':'🚗','trade':'🏢','licence':'📋','license':'📋','labour':'👷','labor':'👷','contract':'📝','accommodation':'🏠','apartment':'🏠','rent':'🏠','office':'🏢','installment':'💳','payment':'💳','bank':'🏦','tax':'📊','subscription':'📡','utility':'⚡'};
-var QUICK_CATS=[{icon:'🛂',label:'Visas'},{icon:'🛡️',label:'Insurance'},{icon:'🚗',label:'Vehicles'},{icon:'📋',label:'Trade'},{icon:'👷',label:'Labour'},{icon:'🏠',label:'Accommodation'},{icon:'💳',label:'Apartment Installment'},{icon:'📝',label:'Labour Contract'}];
+    let items = loadItems();
+    let editingIndex = null;
+    let pendingSecureAction = null;
+    let unlockedUntil = 0;
+    let activeStatusFilter = "ALL";
+    let activeCategoryFilter = "ALL";
 
-var data=loadData();
-var editId=null,activeFilter='ALL',statusFilter=null,deleteTarget=null,undoStack=null,searchTimer=null,toastTimer=null,suggTimer=null;
+    const tableBody = document.getElementById("tableBody");
+    const mobileCards = document.getElementById("mobileCards");
+    const searchBox = document.getElementById("searchBox");
+    const categoryChips = document.getElementById("categoryChips");
+    const entryForm = document.getElementById("entryForm");
+    const passwordOverlay = document.getElementById("passwordOverlay");
+    const passwordInput = document.getElementById("passwordInput");
+    const passwordError = document.getElementById("passwordError");
 
-function byId(id){return document.getElementById(id);}
-function safeGet(key){try{return window.localStorage.getItem(key);}catch(e){storageWorks=false;return memoryStore||null;}}
-function safeSet(key,val){try{window.localStorage.setItem(key,val);storageWorks=true;return true;}catch(e){storageWorks=false;memoryStore=val;return false;}}
-function loadData(){var raw=safeGet(STORAGE_KEY); if(!raw){return DEFAULT_DATA.slice();} try{var arr=JSON.parse(raw); if(!arr || !arr.length){return DEFAULT_DATA.slice();} return arr.map(function(x,i){return {id:String(x.id||genId()+i),category:String(x.category||'Other'),description:String(x.description||'Untitled'),expiryDate:String(x.expiryDate||todayISO())};});}catch(e){return DEFAULT_DATA.slice();}}
-function save(){safeSet(STORAGE_KEY,JSON.stringify(data)); updateStorageLine();}
-function updateStorageLine(){var line=byId('storageLine'),txt=byId('storageText'); if(storageWorks){line.classList.remove('error'); txt.textContent='Auto saved on this device';}else{line.classList.add('error'); txt.textContent='Temporary session only';}}
-function genId(){return String(Date.now())+'_'+String(Math.floor(Math.random()*100000));}
-function pad(n){return n<10?'0'+n:''+n;}
-function todayObj(){var d=new Date(); d.setHours(0,0,0,0); return d;}
-function todayISO(){var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
-function addDaysISO(days){var d=new Date(); d.setDate(d.getDate()+days); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
-function parseLocalDate(s){var p=String(s).split('-'); if(p.length!==3){return todayObj();} var d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); d.setHours(0,0,0,0); return d;}
-function daysLeft(s){return Math.ceil((parseLocalDate(s).getTime()-todayObj().getTime())/86400000);}
-function statusOf(n){if(n<0)return 'expired'; if(n<=30)return 'soon'; return 'safe';}
-function labelOf(n){if(n<0)return 'EXPIRED'; if(n<=30)return '≤ 30 DAYS'; return 'SAFE';}
-function emojiOf(st){return st==='expired'?'⛔':st==='soon'?'●':'✓';}
-function fmtDate(s){var d=parseLocalDate(s); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
-function daysLabel(n){if(n<0)return Math.abs(n)+'d overdue'; if(n===0)return 'Today'; if(n===1)return '1 day left'; return n+'d left';}
-function progressPct(n){if(n<0)return 100; if(n>365)return 3; return Math.max(3,Math.round((1-(n/365))*100));}
-function esc(s){return String(s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m];});}
-function catIcon(cat){var k=String(cat).toLowerCase(); for(var key in CAT_ICON_MAP){if(k.indexOf(key)>-1)return CAT_ICON_MAP[key];} return '📁';}
-function getCategories(){var seen={},out=[]; data.forEach(function(x){if(!seen[x.category]){seen[x.category]=true; out.push(x.category);}}); return out.sort();}
-function haptic(){try{if(navigator.vibrate)navigator.vibrate(10);}catch(e){}}
-function requireEditCode(){
-  var code=window.prompt('Enter edit code:');
-  if(code===null)return false;
-  if(String(code).trim()===EDIT_CODE){showToast('Code accepted','🔓'); return true;}
-  showToast('Wrong code. View only','🔒');
-  return false;
-}
+    function withPassword(action) {
+      if (Date.now() < unlockedUntil) {
+        action();
+        return;
+      }
 
-function updateHeaderDate(){byId('headerDate').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});}
-function showToast(msg,emoji,withUndo){clearTimeout(toastTimer); byId('toastMsg').textContent=(emoji||'✓')+' '+msg; byId('toastUndo').style.display=withUndo?'inline-block':'none'; byId('toast').classList.add('show'); toastTimer=setTimeout(function(){byId('toast').classList.remove('show');},withUndo?5500:2600);}
-function hideToast(){clearTimeout(toastTimer); byId('toast').classList.remove('show');}
+      pendingSecureAction = action;
+      passwordInput.value = "";
+      passwordError.textContent = "";
+      passwordOverlay.classList.add("active");
+      setTimeout(() => passwordInput.focus(), 50);
+    }
 
-function animateNum(el,target){var cur=parseInt(el.textContent,10)||0; if(cur===target){el.textContent=target;return;} var diff=target-cur,steps=Math.min(Math.abs(diff),14)||1,i=0; var iv=setInterval(function(){i++; el.textContent=Math.round(cur+diff*(i/steps)); if(i>=steps){clearInterval(iv); el.textContent=target;}},24);}
-function updateAlerts(){var expired=0,soon=0,plan=0; data.forEach(function(x){var n=daysLeft(x.expiryDate); if(n<0)expired++; else if(n<=30)soon++; else if(n<=60)plan++;}); var banner=byId('alertBanner'),parts=[]; if(expired)parts.push(expired+' expired'); if(soon)parts.push(soon+' inside 30 days'); if(plan)parts.push(plan+' inside 60 days'); if(parts.length){byId('alertText').textContent=parts.join(' • ')+' — please follow up.'; byId('alertPill').textContent=expired+soon+plan; banner.classList.add('show');}else{banner.classList.remove('show');}}
-function buildChips(){var cats=getCategories(); var html='<button class="chip'+(activeFilter==='ALL'&&!statusFilter?' active':'')+'" data-cat="ALL" type="button">All</button>'; cats.forEach(function(c){html+='<button class="chip'+(activeFilter===c?' active':'')+'" data-cat="'+esc(c)+'" type="button">'+catIcon(c)+' '+esc(c)+'</button>';}); byId('chips').innerHTML=html;}
-function buildQuickCats(){var html=''; QUICK_CATS.forEach(function(c){html+='<button class="qcat-btn" data-qcat="'+esc(c.label)+'" type="button"><span class="qcat-icon">'+c.icon+'</span> '+esc(c.label)+'</button>';}); byId('quickCats').innerHTML=html;}
+    function submitPassword() {
+      if (passwordInput.value !== DASHBOARD_PASSWORD) {
+        passwordError.textContent = "Wrong password. Please try again.";
+        passwordInput.select();
+        return;
+      }
 
-function render(){
-  updateHeaderDate();
-  var q=(byId('searchInput').value||'').toLowerCase().trim();
-  var sort=byId('sortSelect').value;
-  var rows=data.map(function(x){var n=daysLeft(x.expiryDate); return {id:x.id,category:x.category,description:x.description,expiryDate:x.expiryDate,days:n,status:statusOf(n)};});
-  if(activeFilter!=='ALL')rows=rows.filter(function(x){return x.category===activeFilter;});
-  if(statusFilter==='expired')rows=rows.filter(function(x){return x.status==='expired';});
-  if(statusFilter==='soon')rows=rows.filter(function(x){return x.status==='soon';});
-  if(statusFilter==='plan60')rows=rows.filter(function(x){return x.days>=0 && x.days<=60;});
-  if(q)rows=rows.filter(function(x){return (x.category+' '+x.description+' '+x.expiryDate).toLowerCase().indexOf(q)>-1;});
-  if(sort==='days-asc')rows.sort(function(a,b){return a.days-b.days;});
-  else if(sort==='days-desc')rows.sort(function(a,b){return b.days-a.days;});
-  else if(sort==='alpha')rows.sort(function(a,b){return a.description.localeCompare(b.description);});
-  else if(sort==='cat')rows.sort(function(a,b){return a.category.localeCompare(b.category)||a.days-b.days;});
-  var counts={total:data.length,expired:0,soon:0,plan60:0};
-  data.forEach(function(x){var n=daysLeft(x.expiryDate); if(n<0)counts.expired++; else if(n<=30)counts.soon++; if(n>=0&&n<=60)counts.plan60++;});
-  animateNum(byId('kpiTotalNum'),counts.total); animateNum(byId('kpiExpiredNum'),counts.expired); animateNum(byId('kpiSoonNum'),counts.soon); animateNum(byId('kpiPlanNum'),counts.plan60);
-  var kpis=document.querySelectorAll('.kpi'); for(var i=0;i<kpis.length;i++){var f=kpis[i].getAttribute('data-kpi'); kpis[i].classList.toggle('lit',statusFilter===f || (f==='ALL'&&!statusFilter&&activeFilter==='ALL'));}
-  byId('resultCount').textContent=rows.length===data.length?rows.length+' items':rows.length+' of '+data.length;
-  updateAlerts();
-  var list=byId('cardList');
-  if(!rows.length){list.innerHTML='<div class="empty"><span class="empty-icon">📭</span><h3>Nothing here</h3><p>No items match your current filter or search.</p></div>';return;}
-  var html=''; rows.forEach(function(x,idx){html+=cardHTML(x,idx);}); list.innerHTML=html;
-}
-function cardHTML(x,idx){return '<div class="card '+x.status+'" style="animation-delay:'+Math.min(idx*22,260)+'ms" data-id="'+esc(x.id)+'"><div class="card-inner"><div class="card-glow" aria-hidden="true"></div><div class="card-bar" aria-hidden="true"></div><div class="card-top"><div class="card-left"><div class="card-cat-row"><span class="cat-icon" aria-hidden="true">'+catIcon(x.category)+'</span><span class="card-cat">'+esc(x.category)+'</span></div><div class="card-desc" title="'+esc(x.description)+'">'+esc(x.description)+'</div></div><span class="badge '+x.status+'">'+emojiOf(x.status)+' '+labelOf(x.days)+'</span></div><div class="card-meta"><div class="card-date-text">Expires <strong>'+fmtDate(x.expiryDate)+'</strong></div><div class="days-pill '+x.status+'">'+daysLabel(x.days)+'</div></div><div class="prog-wrap"><div class="prog-bg"><div class="prog-fill" style="width:'+progressPct(x.days)+'%"></div></div></div><div class="card-actions"><button class="btn-edit" data-action="edit" data-id="'+esc(x.id)+'" type="button">✎ Edit</button><button class="btn-del" data-action="delete" data-id="'+esc(x.id)+'" type="button">🗑 Delete</button></div></div></div>';}
+      unlockedUntil = Date.now() + 2 * 60 * 1000;
+      passwordOverlay.classList.remove("active");
+      const action = pendingSecureAction;
+      pendingSecureAction = null;
+      if (typeof action === "function") action();
+    }
 
-function openSheet(){if(!requireEditCode())return; editSession=true; editId=null; byId('sheetTitle').textContent='Add Expiry'; byId('catInput').value=''; byId('descInput').value=''; byId('dateInput').value=addDaysISO(365); var qs=document.querySelectorAll('.qcat-btn'); for(var i=0;i<qs.length;i++)qs[i].classList.remove('sel'); updateDateHint(); openSheetUI(); setTimeout(function(){try{byId('catInput').focus();}catch(e){}},300);}
-function openEdit(id){if(!requireEditCode())return; editSession=true; editId=id; var x=data.filter(function(d){return d.id===id;})[0]; if(!x){editSession=false;return;} byId('sheetTitle').textContent='Edit Expiry'; byId('catInput').value=x.category; byId('descInput').value=x.description; byId('dateInput').value=x.expiryDate; var qs=document.querySelectorAll('.qcat-btn'); for(var i=0;i<qs.length;i++)qs[i].classList.toggle('sel',qs[i].getAttribute('data-qcat')===x.category); updateDateHint(); openSheetUI();}
-function openSheetUI(){byId('overlay').classList.add('open'); byId('sheet').classList.add('open'); document.body.style.overflow='hidden'; haptic();}
-function closeSheet(){byId('overlay').classList.remove('open'); byId('sheet').classList.remove('open'); document.body.style.overflow=''; editSession=false; editId=null; hideSugg();}
-function saveEntry(){if(!editSession){showToast('Enter code first','🔒'); closeSheet(); return;} var cat=byId('catInput').value.trim(),desc=byId('descInput').value.trim(),date=byId('dateInput').value; if(!cat||!desc||!date){showToast('Fill all fields','⚠️');return;} if(editId===null){data.push({id:genId(),category:cat,description:desc,expiryDate:date}); showToast('Item added','✅');}else{var found=false; for(var i=0;i<data.length;i++){if(data[i].id===editId){data[i]={id:editId,category:cat,description:desc,expiryDate:date}; found=true; break;}} if(found)showToast('Item updated','✏️');} save(); editSession=false; closeSheet(); buildChips(); render();}
-function updateDateHint(){var v=byId('dateInput').value,hint=byId('dateHint'); if(!v){hint.textContent='';return;} var n=daysLeft(v); if(n<0){hint.textContent='⛔ '+Math.abs(n)+' days ago'; hint.style.color='var(--expired)';}else if(n===0){hint.textContent='● Expires today'; hint.style.color='var(--soon)';}else if(n<=60){hint.textContent='◆ '+n+' days from today — plan early'; hint.style.color='var(--plan)';}else{hint.textContent='✓ '+n+' days from today'; hint.style.color='var(--safe)';}}
-function showSugg(){clearTimeout(suggTimer); var v=byId('catInput').value.toLowerCase(),matches=getCategories().filter(function(c){return c.toLowerCase().indexOf(v)>-1;}),box=byId('suggestions'); if(!matches.length||!v){box.classList.remove('show');return;} var html=''; matches.forEach(function(c){html+='<div class="sug-item" role="option" data-sugg="'+esc(c)+'"><span>'+catIcon(c)+'</span><span>'+esc(c)+'</span></div>';}); box.innerHTML=html; box.classList.add('show');}
-function hideSugg(){clearTimeout(suggTimer); byId('suggestions').classList.remove('show');}
-function askDelete(id){if(!requireEditCode())return; deleteTarget=id; var x=data.filter(function(d){return d.id===id;})[0]; byId('confirmMsg').textContent=x?'"'+x.description+'" will be removed. You can undo immediately after delete.':'This item will be removed.'; byId('confirmOverlay').classList.add('open');}
-function closeConfirm(){byId('confirmOverlay').classList.remove('open'); deleteTarget=null;}
+    function cancelPassword() {
+      passwordOverlay.classList.remove("active");
+      pendingSecureAction = null;
+      passwordInput.value = "";
+      passwordError.textContent = "";
+    }
 
-function bind(){
-  byId('addBtn').addEventListener('click',openSheet); byId('overlay').addEventListener('click',closeSheet); byId('sheetCloseBtn').addEventListener('click',closeSheet); byId('saveBtn').addEventListener('click',saveEntry);
-  byId('dateInput').addEventListener('input',updateDateHint); byId('dateInput').addEventListener('change',updateDateHint);
-  byId('toastUndo').addEventListener('click',function(){if(undoStack){data=undoStack; undoStack=null; save(); buildChips(); render(); showToast('Deleted item restored','↩️');} hideToast();});
-  byId('chips').addEventListener('click',function(e){var btn=e.target.closest?e.target.closest('.chip'):null; if(!btn)return; activeFilter=btn.getAttribute('data-cat'); statusFilter=null; buildChips(); render();});
-  var kpis=document.querySelectorAll('.kpi'); for(var i=0;i<kpis.length;i++){kpis[i].addEventListener('click',function(){var f=this.getAttribute('data-kpi'); if(f==='ALL'){statusFilter=null;activeFilter='ALL';}else{statusFilter=f;activeFilter='ALL'; byId('sortSelect').value='days-asc';} buildChips(); render();});}
-  byId('searchInput').addEventListener('input',function(e){clearTimeout(searchTimer); byId('clearSearchBtn').classList.toggle('show',e.target.value.length>0); searchTimer=setTimeout(render,160);});
-  byId('clearSearchBtn').addEventListener('click',function(){byId('searchInput').value=''; byId('clearSearchBtn').classList.remove('show'); render();});
-  byId('sortSelect').addEventListener('change',render);
-  byId('cardList').addEventListener('click',function(e){var btn=e.target.closest?e.target.closest('[data-action]'):null; if(!btn)return; if(btn.getAttribute('data-action')==='edit')openEdit(btn.getAttribute('data-id')); if(btn.getAttribute('data-action')==='delete')askDelete(btn.getAttribute('data-id'));});
-  byId('quickCats').addEventListener('click',function(e){var btn=e.target.closest?e.target.closest('.qcat-btn'):null; if(!btn)return; var qs=document.querySelectorAll('.qcat-btn'); for(var i=0;i<qs.length;i++)qs[i].classList.remove('sel'); btn.classList.add('sel'); byId('catInput').value=btn.getAttribute('data-qcat'); hideSugg(); byId('descInput').focus();});
-  byId('catInput').addEventListener('input',showSugg); byId('catInput').addEventListener('focus',showSugg); byId('catInput').addEventListener('blur',function(){suggTimer=setTimeout(hideSugg,200);});
-  byId('suggestions').addEventListener('mousedown',function(e){var item=e.target.closest?e.target.closest('.sug-item'):null; if(!item)return; e.preventDefault(); byId('catInput').value=item.getAttribute('data-sugg'); hideSugg(); byId('descInput').focus();});
-  byId('confirmCancelBtn').addEventListener('click',closeConfirm); byId('confirmOkBtn').addEventListener('click',function(){if(!deleteTarget)return; undoStack=JSON.parse(JSON.stringify(data)); data=data.filter(function(d){return d.id!==deleteTarget;}); save(); closeConfirm(); deleteTarget=null; buildChips(); render(); showToast('Item deleted','🗑',true);});
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(byId('confirmOverlay').classList.contains('open'))closeConfirm(); else closeSheet();}});
-}
+    passwordInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") submitPassword();
+      if (event.key === "Escape") cancelPassword();
+    });
 
-try{bind(); buildQuickCats(); updateStorageLine(); updateHeaderDate(); buildChips(); render(); setInterval(function(){updateHeaderDate(); render();},60000);}catch(err){byId('cardList').innerHTML='<div class="empty"><span class="empty-icon">⚠️</span><h3>Could not load on this viewer</h3><p>Please tap Share and open with Safari/Chrome. Your Android browser should also work.</p></div>';}
-})();
-</script>
+    function freshDefaultItems() {
+      return defaultItems.map((item, index) => ({ id: Date.now() + index, ...item }));
+    }
+
+    function loadItems() {
+      try {
+        if (!window.localStorage) return freshDefaultItems();
+        const initialized = localStorage.getItem(STORAGE_KEY + "_init");
+        const saved = localStorage.getItem(STORAGE_KEY);
+        // Only use defaults if we've never saved before
+        if (!initialized || saved === null) return freshDefaultItems();
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed)) return freshDefaultItems();
+        const cleaned = parsed.filter((item) => item.category && item.description && item.expiryDate);
+        return cleaned; // allow empty — user may have intentionally deleted all items
+      } catch (error) {
+        return freshDefaultItems();
+      }
+    }
+
+    function saveItems() {
+      try {
+        if (window.localStorage && Array.isArray(items)) {
+          localStorage.setItem(STORAGE_KEY + "_init", "1");
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+      } catch (error) {}
+    }
+
+    function toDateOnly(value) {
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function todayDateOnly() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    function daysLeft(expiryDate) {
+      const diff = toDateOnly(expiryDate) - todayDateOnly();
+      return Math.round(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function getStatus(dayCount) {
+      if (dayCount < 0) return "EXPIRED";
+      if (dayCount <= DUE_SOON_DAYS) return "DUE SOON";
+      if (dayCount <= RENEWAL_PLANNING_DAYS) return "TIMELY ACTION";
+      return "SAFE";
+    }
+
+    function getDisplayStatus(status) {
+      if (status === "TIMELY ACTION") return "RENEWAL PLANNING";
+      return status;
+    }
+
+    function getAction(status) {
+      if (status === "EXPIRED") return "Renew Immediately";
+      if (status === "DUE SOON") return "Urgent Renewal";
+      if (status === "TIMELY ACTION") return "Plan Renewal";
+      return "No Action Required";
+    }
+
+    function statusClass(status) {
+      if (status === "EXPIRED") return "expired";
+      if (status === "DUE SOON") return "due-soon";
+      if (status === "TIMELY ACTION") return "timely-action";
+      return "safe";
+    }
+
+
+    function progressPercent(dayCount) {
+      if (dayCount < 0) return 100;
+      if (dayCount > RENEWAL_PLANNING_DAYS) return 100;
+      return Math.max(4, Math.round((dayCount / RENEWAL_PLANNING_DAYS) * 100));
+    }
+
+    function progressFillClass(status) {
+      if (status === "EXPIRED") return "expired-fill";
+      if (status === "DUE SOON") return "due-soon-fill";
+      if (status === "TIMELY ACTION") return "timely-fill";
+      return "safe-fill";
+    }
+
+    function remainingText(dayCount) {
+      if (dayCount < 0) return `Expired ${Math.abs(dayCount)} days ago`;
+      if (dayCount === 0) return "Expires today";
+      return `${dayCount} days remaining`;
+    }
+
+    function remainingBarHtml(dayCount, status) {
+      return `
+        <div class="remaining-block">
+          <div class="remaining-bar">
+            <div class="remaining-fill ${progressFillClass(status)}" style="width: ${progressPercent(dayCount)}%;"></div>
+          </div>
+          <div class="remaining-text">${remainingText(dayCount)}</div>
+        </div>
+      `;
+    }
+
+    function pad2(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function formatDate(value) {
+      const date = toDateOnly(value);
+      return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+    }
+
+    function formatLongDate(date) {
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      return `${pad2(date.getDate())} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    function categoryClass(category) {
+      const key = category.toLowerCase();
+      if (key.includes("apartment")) return "cat-apartment";
+      if (key.includes("accommodation")) return "cat-accommodation";
+      if (key.includes("vehicle")) return "cat-vehicles";
+      if (key.includes("visa")) return "cat-visas";
+      if (key.includes("trade")) return "cat-trade";
+      if (key.includes("insurance")) return "cat-insurance";
+      if (key.includes("labour") || key.includes("labor")) return "cat-labour";
+      return "cat-accommodation";
+    }
+
+    function filteredItems() {
+      const search = searchBox.value.trim().toLowerCase();
+
+      return items.filter((item) => {
+        const dayCount = daysLeft(item.expiryDate);
+        const status = getStatus(dayCount);
+        const matchesSearch =
+          !search ||
+          item.category.toLowerCase().includes(search) ||
+          item.description.toLowerCase().includes(search);
+
+        const matchesStatus = activeStatusFilter === "ALL" || status === activeStatusFilter;
+        const matchesCategory = activeCategoryFilter === "ALL" || item.category === activeCategoryFilter;
+
+        return matchesSearch && matchesStatus && matchesCategory;
+      }).sort((a, b) => daysLeft(a.expiryDate) - daysLeft(b.expiryDate));
+    }
+
+    function setStatusFilter(status) {
+      activeStatusFilter = status;
+
+      document.querySelectorAll(".summary-card").forEach((card) => {
+        card.classList.toggle("active-summary", card.dataset.summary === status);
+      });
+
+      render();
+
+      const tableTop = document.querySelector(".top-tools");
+      if (tableTop) tableTop.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+
+    function setCategoryFilter(category) {
+      activeCategoryFilter = category;
+      document.querySelectorAll(".category-chip").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.category === category);
+      });
+      render();
+    }
+
+    function render() {
+      document.getElementById("lastUpdated").textContent = formatLongDate(new Date());
+
+      const categoryOptions = [...new Set(items.map((item) => item.category))].sort();
+      if (activeCategoryFilter !== "ALL" && !categoryOptions.includes(activeCategoryFilter)) {
+        activeCategoryFilter = "ALL";
+      }
+
+      categoryChips.innerHTML =
+        `<button type="button" class="category-chip ${activeCategoryFilter === "ALL" ? "active" : ""}" data-category="ALL">All</button>` +
+        categoryOptions.map((cat) =>
+          `<button type="button" class="category-chip ${activeCategoryFilter === cat ? "active" : ""}" data-category="${escapeHtml(cat)}">${escapeHtml(cat)}</button>`
+        ).join("");
+
+      categoryChips.querySelectorAll(".category-chip").forEach((btn) => {
+        btn.addEventListener("click", function() {
+          setCategoryFilter(this.dataset.category);
+        });
+      });
+
+      const visible = filteredItems();
+      tableBody.innerHTML = "";
+      mobileCards.innerHTML = "";
+
+      let expired = 0;
+      let soon = 0;
+      let planning = 0;
+      let safe = 0;
+
+      items.forEach((item) => {
+        const status = getStatus(daysLeft(item.expiryDate));
+        if (status === "EXPIRED") expired++;
+        if (status === "DUE SOON") soon++;
+        if (status === "TIMELY ACTION") planning++;
+        if (status === "SAFE") safe++;
+      });
+
+      document.getElementById("totalCount").textContent = items.length;
+      document.getElementById("expiredCount").textContent = expired;
+      document.getElementById("soonCount").textContent = soon;
+      document.getElementById("timelyCount").textContent = planning;
+      document.getElementById("safeCount").textContent = safe;
+
+      document.getElementById("emptyState").classList.toggle("hidden", visible.length > 0);
+      mobileCards.innerHTML = visible.length ? "" : '<div class="empty-state">No items found.</div>';
+
+      visible.forEach((item) => {
+        const realIndex = items.findIndex((x) => x.id === item.id);
+        const dayCount = daysLeft(item.expiryDate);
+        const status = getStatus(dayCount);
+        const cls = statusClass(status);
+        const action = getAction(status);
+        const displayStatus = getDisplayStatus(status);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="category-cell ${categoryClass(item.category)}">${escapeHtml(item.category)}</td>
+          <td>${escapeHtml(item.description)}</td>
+          <td><strong>${formatDate(item.expiryDate)}</strong></td>
+          <td class="days-cell">${dayCount} d</td>
+          <td class="status-cell ${cls}">${displayStatus}</td>
+          <td class="action-cell ${cls}">${action}${remainingBarHtml(dayCount, status)}</td>
+          <td class="no-print">
+            <div class="row-actions">
+              <button class="mini-btn btn-navy" onclick="secureEditItem(${realIndex})">Edit</button>
+              <button class="mini-btn btn-red" onclick="secureDeleteItem(${realIndex})">Delete</button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = `
+          <div class="mobile-category-outside ${categoryClass(item.category)}">${escapeHtml(item.category)}</div>
+          <div class="mobile-item">
+            <div class="mobile-item-head">
+              <div class="mobile-item-title">${escapeHtml(item.description)}</div>
+              <div class="mobile-status ${cls}">${displayStatus}</div>
+            </div>
+            <div class="mobile-item-body">
+              <div class="mobile-row">
+                <span class="mobile-label">Expiry</span>
+                <span class="mobile-value">${formatDate(item.expiryDate)}</span>
+              </div>
+              <div class="mobile-row">
+                <span class="mobile-label">Days Left</span>
+                <span class="mobile-value">${dayCount} d</span>
+              </div>
+              <div class="mobile-row">
+                <span class="mobile-label">Action</span>
+                <span class="mobile-value">${action}</span>
+              </div>
+              ${remainingBarHtml(dayCount, status)}
+            </div>
+            <div class="mobile-actions no-print">
+              <button class="btn-navy" onclick="secureEditItem(${realIndex})">Edit</button>
+              <button class="btn-red" onclick="secureDeleteItem(${realIndex})">Delete</button>
+            </div>
+          </div>
+        `;
+        mobileCards.appendChild(wrapper);
+      });
+
+      saveItems();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, function(match) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[match];
+      });
+    }
+
+    function secureOpenEntryPanel() {
+      withPassword(function() {
+        editingIndex = null;
+        entryForm.reset();
+        document.getElementById("saveButton").textContent = "Save Item";
+        document.getElementById("entryPanel").classList.add("active");
+        setTimeout(() => document.getElementById("categoryInput").focus(), 100);
+      });
+    }
+
+    function clearForm() {
+      editingIndex = null;
+      entryForm.reset();
+      document.getElementById("saveButton").textContent = "Save Item";
+    }
+
+    function secureEditItem(index) {
+      withPassword(function() { editItem(index); });
+    }
+
+    function editItem(index) {
+      const item = items[index];
+      editingIndex = index;
+      document.getElementById("categoryInput").value = item.category;
+      document.getElementById("descriptionInput").value = item.description;
+      document.getElementById("expiryInput").value = item.expiryDate;
+      document.getElementById("saveButton").textContent = "Update Item";
+      document.getElementById("entryPanel").classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function secureDeleteItem(index) {
+      withPassword(function() { deleteItem(index); });
+    }
+
+    function deleteItem(index) {
+      const item = items[index];
+      if (!confirm(`Delete "${item.description}"?`)) return;
+      items.splice(index, 1);
+      render();
+    }
+
+    function showToast(message, isError) {
+      const toast = document.getElementById("saveToast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.style.background = isError ? "var(--red)" : "var(--green)";
+      toast.classList.add("active");
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(function() { toast.classList.remove("active"); }, 4500);
+    }
+
+    function saveToFile() {
+      try {
+        // Strip IDs so format matches the original defaultItems array
+        const cleanItems = items.map(function(item) {
+          return { category: item.category, description: item.description, expiryDate: item.expiryDate };
+        });
+
+        // Serialize with nice indentation matching the original file style
+        const newDefaultBlock = "const defaultItems = " + JSON.stringify(cleanItems, null, 6) + ";";
+
+        // Capture current full-page HTML (script tags preserve original source)
+        let fileHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+        // Replace the defaultItems array in the embedded script
+        const before = fileHtml.length;
+        fileHtml = fileHtml.replace(/const defaultItems = \[[\s\S]*?\];/, newDefaultBlock);
+
+        if (fileHtml.length === before) {
+          showToast("\u26a0 Data saved to browser only — could not embed in file.", true);
+          return;
+        }
+
+        // Trigger download
+        const blob = new Blob([fileHtml], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "expiry_tracking_dashboard.html";
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(function() {
+          try { document.body.removeChild(link); URL.revokeObjectURL(url); } catch(e) {}
+        }, 1500);
+
+        showToast("\u2713 Downloaded! Replace your old file with the new file to keep changes.");
+      } catch (err) {
+        showToast("Save failed: " + err.message, true);
+      }
+    }
+
+    entryForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      withPassword(function() {
+        const category = document.getElementById("categoryInput").value.trim();
+        const description = document.getElementById("descriptionInput").value.trim();
+        const expiryDate = document.getElementById("expiryInput").value;
+
+        if (!category || !description || !expiryDate) {
+          alert("Please fill category, description, and expiry date.");
+          return;
+        }
+
+        const item = {
+          id: editingIndex === null ? Date.now() : items[editingIndex].id,
+          category,
+          description,
+          expiryDate
+        };
+
+        if (editingIndex === null) {
+          items.push(item);
+        } else {
+          items[editingIndex] = item;
+        }
+
+        clearForm();
+        document.getElementById("entryPanel").classList.remove("active");
+        render();
+      });
+    });
+
+    searchBox.addEventListener("input", render);
+
+    categoryChips.querySelectorAll(".category-chip").forEach((btn) => {
+      btn.addEventListener("click", function() {
+        setCategoryFilter(this.dataset.category);
+      });
+    });
+
+    try {
+      render();
+    } catch (error) {
+      items = freshDefaultItems();
+      render();
+    }
+  </script>
 </body>
 </html>
